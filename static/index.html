@@ -1,9 +1,60 @@
 <!doctype html>
 <title>Upload new File</title>
 <h1>Upload new File</h1>
+
 <form method="post" enctype="multipart/form-data" action="./post">
   <p>
-    <input type="file" name="file" />
-    <input type="submit" value="Upload" />
+    <input type="file" name="file" id="file" />
   </p>
 </form>
+<script>
+document.getElementById('file').addEventListener('change', (ev)=>{
+  const files = ev.target.files;
+  const prms = Array.from(files).map((file)=>
+    Promise.all([
+      fetchImage(URL.createObjectURL(file)),
+      detect(file)
+    ])
+  );
+  Promise.all(prms).then((rets, i)=>{
+    rets.forEach(([img, dets])=>{
+      URL.revokeObjectURL(img.src);
+      const ctx = document.createElement("canvas").getContext("2d");
+      ctx.canvas.width = img.width;
+      ctx.canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      ctx.strokeStyle = "rgb(0, 255, 0)";
+      dets.forEach(([a, b, c, d])=>{
+        ctx.strokeRect(a, b, c-a, d-b);
+      });
+      document.body.appendChild(ctx.canvas);
+      console.log(img, dets);
+      
+    });
+  });
+});
+
+function fetchImage(url) {
+  return new Promise((resolve, reject)=>{
+    var img = new Image();
+    img.src = url;
+    img.onload = ()=> resolve(img);
+    img.onerror = reject;
+  });
+}
+
+function detect(blob){
+  return new Promise((resolve, reject)=>{
+    const formData = new FormData();
+    formData.append("file", blob);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "./post");
+    xhr.responseType = "json";
+    xhr.onload = ()=>{
+        if(xhr.status === 200){ resolve(xhr.response); }
+        else{ reject(xhr) }
+    };
+    xhr.send(formData);
+  });
+}
+</script>
