@@ -1,24 +1,20 @@
 <!doctype html>
 <title>Upload new File</title>
 <h1>Upload new File</h1>
-
 <form method="post" enctype="multipart/form-data" action="./post">
-  <p>
-    <input type="file" name="file" id="file" />
-  </p>
+    <input type="file" name="files" id="files" multiple="multiple" />
+    <!--input type="submit" value="submit" /-->
 </form>
 <script>
-document.getElementById('file').addEventListener('change', (ev)=>{
-  const files = ev.target.files;
-  const prms = Array.from(files).map((file)=>
-    Promise.all([
-      fetchImage(URL.createObjectURL(file)),
-      detect(file)
-    ])
-  );
-  Promise.all(prms).then((rets, i)=>{
+document.getElementById('files').addEventListener('change', (ev)=>{
+  const files = Array.from(ev.target.files);
+  Promise.all([
+    detect(files),
+    Promise.all(files.map((file)=> fetchImage(URL.createObjectURL(file)) ) ),
+  ]).then(([rets, imgs])=>{
     console.log(rets);
-    rets.forEach(([img, [[w, h], dets]])=>{
+    rets.forEach(([[w, h], dets], i)=>{
+      const img = imgs[i];
       URL.revokeObjectURL(img.src);
       const ctx = document.createElement("canvas").getContext("2d");
       ctx.canvas.width = img.width;
@@ -29,8 +25,6 @@ document.getElementById('file').addEventListener('change', (ev)=>{
         ctx.strokeRect(a/w*img.width, b/h*img.height, (c-a)/w*img.width, (d-b)/h*img.height);
       });
       document.body.appendChild(ctx.canvas);
-      console.log(img, dets);
-      
     });
   });
 });
@@ -44,10 +38,12 @@ function fetchImage(url) {
   });
 }
 
-function detect(blob){
+function detect(blobs){
   return new Promise((resolve, reject)=>{
     const formData = new FormData();
-    formData.append("file", blob);
+    blobs.forEach((blob, i)=>{
+      formData.append("files", blob);
+    });
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "./post");
     xhr.responseType = "json";

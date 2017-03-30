@@ -17,23 +17,24 @@ def upload_file():
         print("post it")
         return "[]"
        
-    if 'file' not in request.files:
-        print('No file part')
-        return "[]"
+    files = request.files.getlist("files")
 
-    file = request.files['file']
+    print(files)
+
+    _files = []
+    for (i, file) in enumerate(files):
+        name = ("/tmp/img%d.img" % i)
+        file.save(name)
+        _files.append(name)
     
-    if file.filename == '':
-        print('No selected file')
-        return "[]"
+    print(_files)
+
     
-    file.save("/tmp/img.img")
-    
-    print("processing...")
+    print("processing...", _files)
     
     start = time.time()
     
-    ret = det.detect("/tmp/img.img")
+    ret = det.detect(_files)
     
     elapsed = time.time() - start
     

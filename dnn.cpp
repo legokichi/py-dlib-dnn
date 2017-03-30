@@ -23,35 +23,51 @@ using net_type = loss_mmod<con<1,9,9,1,1,rcon5<rcon5<rcon5<downsampler<input_rgb
 
 class DNN {
 public:
-    DNN(const std::string mmod_file_path) {
+    DNN(const string mmod_file_path) {
        deserialize(mmod_file_path) >> net;  
     }
     net_type net;
-    std::pair<std::pair<long, long>, std::vector<std::tuple<long, long, long, long>>> detect(const std::string img_file_path){
-        matrix<rgb_pixel> img;
-        load_image(img, img_file_path);
+    std::vector<pair<pair<long, long>, std::vector<tuple<long, long, long, long>>>> detect(std::vector<string> img_file_paths){
 
-        // Upsampling the image will allow us to detect smaller faces but will cause the
-        // program to use more RAM and run longer.
-        while(img.size() < 1800*1800) pyramid_up(img);
-        
-        auto dets = net(img);
+        std::vector<matrix<rgb_pixel>> imgs{};
 
-        std::pair<long, long> size(img.nc(), img.nr());
-        std::vector<std::tuple<long, long, long, long>> rects;
+        for (auto&& path : img_file_paths){
 
-        for (auto&& d : dets){
-            auto rect = d.rect;
-            std::tuple<long, long, long, long> _rect{
-                rect.left(),
-                rect.top(),
-                rect.right(),
-                rect.bottom()
-            };
-            rects.push_back(_rect);
+            matrix<rgb_pixel> img;
+
+            load_image(img, path);
+
+            while(img.size() < 1800*1800) pyramid_up(img);
+
+            imgs.push_back(img);
         }
-        std::pair<std::pair<long, long>, std::vector<std::tuple<long, long, long, long>>> ret(size, rects);
-        return ret;
+        
+        std::vector<std::vector<mmod_rect>> detss = net(imgs);
+
+        std::vector<pair<pair<long, long>, std::vector<tuple<long, long, long, long>>>> rets;
+        int i = 0;
+        for (auto&& dets : detss){
+
+            pair<long, long> size(imgs[i].nc(), imgs[i].nr());
+            i++;
+
+            std::vector<tuple<long, long, long, long>> rects;
+
+            for (auto&& d : dets){
+                auto rect = d.rect;
+                tuple<long, long, long, long> _rect{
+                    rect.left(),
+                    rect.top(),
+                    rect.right(),
+                    rect.bottom()
+                };
+                rects.push_back(_rect);
+            }
+
+            pair<pair<long, long>, std::vector<tuple<long, long, long, long>>> ret(size, rects);
+            rets.push_back(ret);
+        }
+        return rets;
     }
 };
 
