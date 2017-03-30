@@ -1,3 +1,5 @@
+# http://myenigma.hatenablog.com/entry/2016/12/17/075812
+# https://pybind11.readthedocs.io/en/master/advanced/cast/stl.html
 g++ \
   -std=gnu++11 -Wall -v \
   -O3 \
@@ -18,7 +20,4 @@ g++ \
   `python-config --includes` \
   -shared -Wl,-soname,dnn.so \
   -o dnn.so
-
-wget http://dlib.net/files/mmod_human_face_detector.dat.bz2
-bzip2 -d mmod_human_face_detector.dat.bz2
-
+python ./example.py

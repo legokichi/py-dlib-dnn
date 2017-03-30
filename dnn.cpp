@@ -1,4 +1,5 @@
-#include<pybind11/pybind11.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <dlib/dnn.h>
 #include <dlib/data_io.h>
 #include <dlib/image_processing.h>
@@ -26,7 +27,8 @@ public:
        deserialize(mmod_file_path) >> net;  
     }
     net_type net;
-    const std::string detect(const std::string img_file_path){
+    std::vector<std::vector<long>> detect(const std::string img_file_path){
+        std::vector<std::vector<long>> rects;
         try {
             matrix<rgb_pixel> img;
             load_image(img, img_file_path);
@@ -37,21 +39,20 @@ public:
             
             auto dets = net(img);
 
-            std::stringstream ss;
             for (auto&& d : dets){
                 auto rect = d.rect;
-                ss
-                  << "["
-                  << "[" << rect.left() << "," << rect.top() << "]"
-                  << ","
-                  << "[" << rect.right() << "," << rect.bottom() << "]"
-                  << "]"
-                  << '\n';
+                std::vector<long> _rect{
+                    rect.left(),
+                    rect.top(),
+                    rect.right(),
+                    rect.bottom()
+                };
+                rects.push_back(_rect);
             }
-            string s = ss.str();
-            return s;
+            return rects;
         }catch(std::exception& e){
-            return e.what();
+            return rects;
+            //return e.what();
         }
     }
 };
