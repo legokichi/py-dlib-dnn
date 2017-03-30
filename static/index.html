@@ -17,15 +17,16 @@ document.getElementById('file').addEventListener('change', (ev)=>{
     ])
   );
   Promise.all(prms).then((rets, i)=>{
-    rets.forEach(([img, dets])=>{
+    console.log(rets);
+    rets.forEach(([img, [[w, h], dets]])=>{
       URL.revokeObjectURL(img.src);
       const ctx = document.createElement("canvas").getContext("2d");
       ctx.canvas.width = img.width;
       ctx.canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      ctx.strokeStyle = "rgb(0, 255, 0)";
+      ctx.strokeStyle = "rgb(155, 187, 89)";
       dets.forEach(([a, b, c, d])=>{
-        ctx.strokeRect(a, b, c-a, d-b);
+        ctx.strokeRect(a/w*img.width, b/h*img.height, (c-a)/w*img.width, (d-b)/h*img.height);
       });
       document.body.appendChild(ctx.canvas);
       console.log(img, dets);

@@ -27,33 +27,31 @@ public:
        deserialize(mmod_file_path) >> net;  
     }
     net_type net;
-    std::vector<std::vector<long>> detect(const std::string img_file_path){
-        std::vector<std::vector<long>> rects;
-        try {
-            matrix<rgb_pixel> img;
-            load_image(img, img_file_path);
+    std::pair<std::pair<long, long>, std::vector<std::tuple<long, long, long, long>>> detect(const std::string img_file_path){
+        matrix<rgb_pixel> img;
+        load_image(img, img_file_path);
 
-            // Upsampling the image will allow us to detect smaller faces but will cause the
-            // program to use more RAM and run longer.
-            while(img.size() < 1800*1800) pyramid_up(img);
-            
-            auto dets = net(img);
+        // Upsampling the image will allow us to detect smaller faces but will cause the
+        // program to use more RAM and run longer.
+        while(img.size() < 1800*1800) pyramid_up(img);
+        
+        auto dets = net(img);
 
-            for (auto&& d : dets){
-                auto rect = d.rect;
-                std::vector<long> _rect{
-                    rect.left(),
-                    rect.top(),
-                    rect.right(),
-                    rect.bottom()
-                };
-                rects.push_back(_rect);
-            }
-            return rects;
-        }catch(std::exception& e){
-            return rects;
-            //return e.what();
+        std::pair<long, long> size(img.nc(), img.nr());
+        std::vector<std::tuple<long, long, long, long>> rects;
+
+        for (auto&& d : dets){
+            auto rect = d.rect;
+            std::tuple<long, long, long, long> _rect{
+                rect.left(),
+                rect.top(),
+                rect.right(),
+                rect.bottom()
+            };
+            rects.push_back(_rect);
         }
+        std::pair<std::pair<long, long>, std::vector<std::tuple<long, long, long, long>>> ret(size, rects);
+        return ret;
     }
 };
 
