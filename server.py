@@ -34,17 +34,24 @@ def upload_file():
     
     start = time.time()
     
-    ret = det.detect(_files, 1000)
+    ret = det.detect(_files, 800)
     
     elapsed = time.time() - start
     
     print(elapsed, "sec, ", ret)
 
-    return app.response_class(
+    res = app.response_class(
         response=json.dumps(ret),
         status=200,
         mimetype='application/json'
     )
+    h = res.headers
+    h['Access-Control-Allow-Origin'] = "*"
+    h['Access-Control-Allow-Methods'] = "POST"
+    h['Access-Control-Max-Age'] = "21600"
+
+    return res
+
 
 
 
