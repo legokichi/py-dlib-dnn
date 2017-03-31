@@ -27,7 +27,7 @@ public:
        deserialize(mmod_file_path) >> net;  
     }
     net_type net;
-    std::vector<pair<pair<long, long>, std::vector<tuple<long, long, long, long>>>> detect(std::vector<string> img_file_paths){
+    std::vector<pair<pair<long, long>, std::vector<tuple<long, long, long, long>>>> detect(std::vector<string> img_file_paths, uint32_t upsampling=1000){
 
         std::vector<matrix<rgb_pixel>> imgs{};
 
@@ -37,7 +37,7 @@ public:
 
             load_image(img, path);
 
-            while(img.size() < 1800*1800) pyramid_up(img);
+            while(img.size() < upsampling*upsampling) pyramid_up(img);
 
             imgs.push_back(img);
         }

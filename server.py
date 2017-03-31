@@ -34,7 +34,7 @@ def upload_file():
     
     start = time.time()
     
-    ret = det.detect(_files)
+    ret = det.detect(_files, 1000)
     
     elapsed = time.time() - start
     
